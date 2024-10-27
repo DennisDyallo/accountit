@@ -1,0 +1,45 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Dev\\Experiments\\AccountIt\\AccountIt\\obj\\Debug\\net9.0\\scopedcss\\projectbundle\\AccountIt.bundle.scp.css",
+      "PackagePath": "staticwebassets\\AccountIt.z4ot7900qs.bundle.scp.css"
+    },
+    {
+      "Id": "C:\\Dev\\Experiments\\AccountIt\\AccountIt\\wwwroot\\app.css",
+      "PackagePath": "staticwebassets\\app.css"
+    },
+    {
+      "Id": "C:\\Dev\\Experiments\\AccountIt\\AccountIt\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "C:\\Dev\\Experiments\\AccountIt\\AccountIt\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "C:\\Dev\\Experiments\\AccountIt\\AccountIt\\wwwroot\\favicon.png",
+      "PackagePath": "staticwebassets\\favicon.png"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.AccountIt.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.AccountIt.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.build.AccountIt.props",
+      "PackagePath": "build\\AccountIt.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildMultiTargeting.AccountIt.props",
+      "PackagePath": "buildMultiTargeting\\AccountIt.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildTransitive.AccountIt.props",
+      "PackagePath": "buildTransitive\\AccountIt.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
