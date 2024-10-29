@@ -1,0 +1,124 @@
+@page "/transactions"
+@using UseCases
+@using Domain.Entities
+@using Domain.Enums
+@inject ITransactionService TransactionService
+
+<h3>Transactions</h3>
+<!-- Transaktioner -->
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>New Transaction</h4>
+        <!-- Ny Transaktion -->
+        <EditForm Model="@newTransaction" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <!-- Datum: -->
+                <InputDate id="date" @bind-Value="newTransaction.Date" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description:</label>
+                <!-- Beskrivning: -->
+                <InputText id="description" @bind-Value="newTransaction.Description" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount:</label>
+                <!-- Belopp: -->
+                <InputNumber id="amount" @bind-Value="newTransaction.Amount" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="accountNumber">Account Number:</label>
+                <!-- Kontonummer: -->
+                <InputText id="accountNumber" @bind-Value="newTransaction.AccountNumber" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label for="vatRate">VAT Rate:</label>
+                <!-- Momssats: -->
+                <InputSelect id="vatRate" @bind-Value="newTransaction.VATRate" class="form-control">
+                    @foreach (var rate in Enum.GetValues(typeof(VATRate)))
+                    {
+                        <option value="@rate">@rate</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <InputCheckbox @bind-Value="newTransaction.IsPrivate" />
+                    Private Transaction
+                    <!-- Privat Transaktion -->
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add Transaction</button>
+            <!-- Lägg till Transaktion -->
+        </EditForm>
+    </div>
+
+    <div class="col-md-6">
+        <h4>Recent Transactions</h4>
+        <!-- Senaste Transaktioner -->
+        @if (recentTransactions.Any())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <!-- Datum -->
+                        <th>Description</th>
+                        <!-- Beskrivning -->
+                        <th>Amount</th>
+                        <!-- Belopp -->
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var transaction in recentTransactions)
+                    {
+                        <tr>
+                            <td>@transaction.Date.ToShortDateString()</td>
+                            <td>@transaction.Description</td>
+                            <td>@transaction.Amount.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No recent transactions.</p>
+            <!-- Inga senaste transaktioner. -->
+        }
+    </div>
+</div>
+
+@code {
+    // New transaction object
+    // Nytt transaktionsobjekt
+    private Transaction newTransaction = new Transaction(DateTime.Now, "", 0, "", VATRate.Zero, false);
+
+    // List of recent transactions
+    // Lista över senaste transaktioner
+    private List<Transaction> recentTransactions = new List<Transaction>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        recentTransactions = await TransactionService.GetRecentTransactionsAsync(10);
+    }
+
+    // Handle form submission
+    // Hantera formulärinlämning
+    private async Task HandleValidSubmit()
+    {
+        await TransactionService.CreateTransactionAsync(newTransaction);
+        recentTransactions = await TransactionService.GetRecentTransactionsAsync(10);
+        newTransaction = new Transaction(DateTime.Now, "", 0, "", VATRate.Zero, false);
+    }
+}
