@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.Wasm", "Web.Wasm\Web.Wa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UseCases.Tests", "UseCases.Tests\UseCases.Tests.csproj", "{E771C91C-3D5D-470A-92D9-88E25B69202F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{6EE043F9-EB80-4A1B-A954-390A34D52D3E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,5 +53,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1A9D007A-54AB-48F0-AEFA-597A373F0576}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E771C91C-3D5D-470A-92D9-88E25B69202F} = {6EE043F9-EB80-4A1B-A954-390A34D52D3E}
 	EndGlobalSection
 EndGlobal
