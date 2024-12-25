@@ -12,7 +12,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "dexie": "^4.0.10"
+    "dexie": "^4.0.10",
+    "terser": "^5.37.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

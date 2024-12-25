@@ -1,261 +1,88 @@
-// src/bridge.ts
-import {
-  GenericDatabase,
-  DatabaseOptions,
-  StoreSchema,
-} from "./database/database";
-import { BridgeError, ValidationError, DatabaseError } from "./errors";
+// bridge.ts
+import Dexie from "dexie";
 
-/**
- * Type guard for error handling
- */
-function isError(error: unknown): error is Error {
-  return error instanceof Error;
-}
+let db: Dexie | null = null;
 
-/**
- * Main interop class for Blazor communication
- */
-export class DexieInterop {
-  private static db: GenericDatabase | null = null;
-  private static isInitialized = false;
+let dexie = {
+  // Initialize database
+  init: (name: string, version: number, schema: { [key: string]: string }) => {
+    db = new Dexie(name);
+    db.version(version).stores(schema);
+    return db.open();
+  },
 
-  /**
-   * Initializes the database with the given configuration
-   */
-  static async initialize(options: DatabaseOptions): Promise<void> {
-    if (this.isInitialized) {
-      console.warn("Database already initialized");
-      return;
+  deleteDatabase: async (name: string) => {
+    if (db) {
+      db.close();
+      db = null;
     }
+    return await Dexie.delete(name);
+  },
 
-    try {
-      this.validateDatabaseOptions(options);
-      this.db = new GenericDatabase(options.name, options.schema);
-      await this.db.open();
-      this.isInitialized = true;
+  // Generic table operations
+  table: {
+    add: (tableName: string, item: any) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).add(item);
+    },
 
-      if (options.enableLogging) {
-        console.info(
-          `Database ${options.name} initialized with stores:`,
-          options.schema.map((s) => s.name).join(", ")
-        );
-      }
-    } catch (error) {
-      const message = isError(error)
-        ? error.message
-        : "Unknown error during initialization";
-      throw new DatabaseError(
-        "Failed to initialize database: " + message,
-        error
-      );
-    }
-  }
+    get: (tableName: string, id: number) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).get(id);
+    },
 
-  /**
-   * Adds an item to a store
-   */
-  static async add<T>(storeName: string, item: T): Promise<number> {
-    this.ensureInitialized();
+    put: (tableName: string, item: any) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).put(item);
+    },
 
-    try {
-      const store = this.db!.getStore(storeName);
-      // Add created timestamp if not present
-      const itemWithTimestamp = {
-        ...item,
-        created: item.hasOwnProperty("created") ? item.created : new Date(),
-      };
+    delete: (tableName: string, id: number) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).delete(id);
+    },
 
-      return await store.add(itemWithTimestamp);
-    } catch (error) {
-      throw this.handleError(error, `Failed to add item to ${storeName}`);
-    }
-  }
+    // Query operations
+    getAll: (tableName: string) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).toArray();
+    },
 
-  /**
-   * Retrieves an item by ID
-   */
-  static async get<T>(storeName: string, id: number): Promise<T | undefined> {
-    this.ensureInitialized();
+    where: (tableName: string, key: string, value: any) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).where(key).equals(value).toArray();
+    },
 
-    try {
-      const store = this.db!.getStore(storeName);
-      return await store.get(id);
-    } catch (error) {
-      throw this.handleError(
-        error,
-        `Failed to get item ${id} from ${storeName}`
-      );
-    }
-  }
+    between: (tableName: string, key: string, lower: any, upper: any) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).where(key).between(lower, upper).toArray();
+    },
 
-  /**
-   * Updates an existing item
-   */
-  static async update<T>(
-    storeName: string,
-    id: number,
-    changes: Partial<T>
-  ): Promise<boolean> {
-    this.ensureInitialized();
+    // Bulk operations
+    bulkAdd: (tableName: string, items: any[]) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).bulkAdd(items);
+    },
 
-    try {
-      const store = this.db!.getStore(storeName);
-      // Add modified timestamp
-      const changesWithTimestamp = {
-        ...changes,
-        modified: new Date(),
-      };
+    bulkPut: (tableName: string, items: any[]) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).bulkPut(items);
+    },
 
-      await store.update(id, changesWithTimestamp);
-      return true;
-    } catch (error) {
-      throw this.handleError(
-        error,
-        `Failed to update item ${id} in ${storeName}`
-      );
-    }
-  }
+    bulkDelete: (tableName: string, ids: number[]) => {
+      if (!db) throw new Error("Database not initialized");
+      return db.table(tableName).bulkDelete(ids);
+    },
+  },
+};
 
-  /**
-   * Deletes an item by ID
-   */
-  static async delete(storeName: string, id: number): Promise<void> {
-    this.ensureInitialized();
+window.dexie = dexie;
 
-    try {
-      const store = this.db!.getStore(storeName);
-      await store.delete(id);
-    } catch (error) {
-      throw this.handleError(
-        error,
-        `Failed to delete item ${id} from ${storeName}`
-      );
-    }
-  }
-
-  /**
-   * Retrieves items by an index value
-   */
-  static async getByIndex<T>(
-    storeName: string,
-    indexName: string,
-    value: any
-  ): Promise<T[]> {
-    this.ensureInitialized();
-
-    try {
-      const store = this.db!.getStore(storeName);
-      return await store.where(indexName).equals(value).toArray();
-    } catch (error) {
-      throw this.handleError(
-        error,
-        `Failed to get items from ${storeName} where ${indexName} equals ${value}`
-      );
-    }
-  }
-
-  /**
-   * Bulk operation to add multiple items
-   */
-  static async bulkAdd<T>(storeName: string, items: T[]): Promise<number[]> {
-    this.ensureInitialized();
-
-    try {
-      const store = this.db!.getStore(storeName);
-      const timestamp = new Date();
-      const itemsWithTimestamp = items.map((item) => ({
-        ...item,
-        created: timestamp,
-      }));
-
-      return await store.bulkAdd(itemsWithTimestamp, { allKeys: true });
-    } catch (error) {
-      throw this.handleError(error, `Failed to bulk add items to ${storeName}`);
-    }
-  }
-
-  /**
-   * Clears all data from a store
-   */
-  static async clear(storeName: string): Promise<void> {
-    this.ensureInitialized();
-
-    try {
-      const store = this.db!.getStore(storeName);
-      await store.clear();
-    } catch (error) {
-      throw this.handleError(error, `Failed to clear store ${storeName}`);
-    }
-  }
-
-  /**
-   * Gets database status information
-   */
-  static async getStatus(): Promise<{
-    isOpen: boolean;
-    stores: string[];
-    version: number;
-    size?: number;
-  }> {
-    this.ensureInitialized();
-
-    try {
-      return {
-        isOpen: this.db!.isOpen(),
-        stores: Array.from(this.db!.stores.keys()),
-        version: this.db!.verno,
-        // Estimate size if possible
-        size: await this.estimateDatabaseSize(),
-      };
-    } catch (error) {
-      throw this.handleError(error, "Failed to get database status");
-    }
-  }
-
-  // Private utility methods
-
-  private static validateDatabaseOptions(options: DatabaseOptions): void {
-    if (!options.name) {
-      throw new ValidationError("Database name is required");
-    }
-    if (!Array.isArray(options.schema) || options.schema.length === 0) {
-      throw new ValidationError("At least one store schema is required");
-    }
-  }
-
-  private static ensureInitialized(): void {
-    if (!this.isInitialized || !this.db) {
-      throw new DatabaseError(
-        "Database not initialized. Call initialize() first."
-      );
-    }
-  }
-
-  private static handleError(error: unknown, context: string): Error {
-    if (error instanceof ValidationError || error instanceof DatabaseError) {
-      return error;
-    }
-
-    const message = isError(error) ? error.message : "Unknown error";
-    return new BridgeError(`${context}: ${message}`, error);
-  }
-
-  private static async estimateDatabaseSize(): Promise<number | undefined> {
-    try {
-      const stats = await navigator.storage.estimate();
-      return stats.usage;
-    } catch {
-      return undefined;
-    }
-  }
-}
-
-// Register for Blazor interop
 declare global {
   interface Window {
-    DexieInterop: typeof DexieInterop;
+    dexie: {
+      init: typeof dexie.init;
+      deleteDatabase: typeof dexie.deleteDatabase;
+      table: typeof dexie.table;
+    };
   }
 }
-
-window.DexieInterop = DexieInterop;
