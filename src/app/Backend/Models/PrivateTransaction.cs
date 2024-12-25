@@ -1,9 +1,10 @@
 
-// Privata transaktioner (för NE-bilaga)
-
-
+using Taxana.Backend.Enums;
 
 namespace Taxana.Backend.Models;
+
+// Privata transaktioner (för NE-bilaga)
+// Eget "UTTAG" eller "INSATTNING"
 
 public class PrivateTransaction
 {
@@ -17,5 +18,5 @@ public class PrivateTransaction
     public PrivateTransactionType Type { get; init; }
 
     // Beskrivning
-    public string Description { get; init; }
+    public required string Description { get; init; }
 }

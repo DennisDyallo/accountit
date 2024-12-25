@@ -1,7 +1,7 @@
-using Domain.Infrastructure;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Taxana;
+using Taxana.Backend.Infrastructure;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 

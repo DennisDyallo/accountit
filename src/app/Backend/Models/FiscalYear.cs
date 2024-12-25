@@ -5,7 +5,7 @@ namespace Taxana.Backend.Models;
 public class FiscalYear
 {
     // Period
-    public AccountingPeriod Period { get; init; }
+    public required AccountingPeriod Period { get; init; }
 
     // Ingående balans
     public decimal OpeningBalance { get; init; }
@@ -17,5 +17,5 @@ public class FiscalYear
     public bool IsLocked { get; init; }
 
     // Bokslutstransaktioner
-    public List<YearEndAdjustment> Adjustments { get; init; }
+    public required List<YearEndAdjustment> Adjustments { get; init; }
 }

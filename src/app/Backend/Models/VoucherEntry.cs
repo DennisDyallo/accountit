@@ -1,14 +1,14 @@
 
 // Verifikationsrad
 
-
+using Taxana.Backend.Enums;
 
 namespace Taxana.Backend.Models;
 
 public class VoucherEntry
 {
     // Konto
-    public Account Account { get; init; }
+    public required Account Account { get; init; }
 
     // Debet
     public decimal Debit { get; init; }

@@ -7,11 +7,11 @@ public class AssetTransaction
 {
     // Unikt ID för transaktionen
     // Unique ID for the transaction
-    public string Id { get; init; }
+    public required string Id { get; init; }
 
     // Koppling till huvudboken
     // Reference to the general ledger voucher
-    public string VoucherId { get; init; }
+    public required string VoucherId { get; init; }
 
     // Transaktionsdatum
     // Transaction date
@@ -31,7 +31,7 @@ public class AssetTransaction
 
     // Beskrivning
     // Description
-    public string Description { get; init; }
+    public required string Description { get; init; }
 
     // Momssats om tillämpligt
     // VAT rate if applicable

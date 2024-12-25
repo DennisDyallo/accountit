@@ -3,14 +3,11 @@ namespace Taxana.Backend.Models;
 
 public class Attachment
 {
-    public string Id { get; init; }
+    public required string Id { get; init; }
 
     // Filnamn
-    public string FileName { get; init; }
+    public string? FileName { get; init; }
 
     // Filtyp
-    public string ContentType { get; init; }
-
-    // Fildata
-    public byte[] Data { get; init; }
+    public string? ContentType { get; init; }
 }

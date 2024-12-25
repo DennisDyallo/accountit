@@ -5,10 +5,10 @@ namespace Taxana.Backend.Models;
 
 public class Asset
 {
-    public string Id { get; init; }
+    public required string Id { get; init; }
 
     // Beskrivning
-    public string Description { get; init; }
+    public required string Description { get; init; }
 
     // Inköpspris
     public decimal PurchasePrice { get; init; }
@@ -23,5 +23,5 @@ public class Asset
     public decimal ResidualValue { get; init; }
 
     // Transaktioner kopplade till tillgången
-    public List<AssetTransaction> Transactions { get; init; }
+    public required List<AssetTransaction> Transactions { get; init; }
 }

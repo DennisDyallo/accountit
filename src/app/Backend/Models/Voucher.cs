@@ -6,22 +6,23 @@ using Taxana.Backend.Enums;
 
 namespace Taxana.Backend.Models;
 
+// Verifikation
 public class Voucher
 {
     // Verifikationsnummer (normalt år + löpnummer)
-    public string Id { get; init; }
+    public required string Id { get; init; }
 
     // Bokföringsdatum
     public DateTime Date { get; init; }
 
     // Beskrivning/text
-    public string Description { get; init; }
+    public required string Description { get; init; }
 
     // Verifikationsrader
-    public List<VoucherEntry> Entries { get; init; }
+    public required List<VoucherEntry> Entries { get; init; }
 
     // Bilagor/underlag
-    public List<Attachment> Attachments { get; init; }
+    public required List<Attachment> Attachments { get; init; }
 
     // Verifikationstyp
     public VoucherType Type { get; init; }

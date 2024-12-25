@@ -1,5 +1,7 @@
 
 
+using Taxana.Backend.Enums;
+
 namespace Taxana.Backend.Models;
 
 // Hjälpklass för vanliga beräkningar

@@ -26,7 +26,7 @@ public class Account
 
     // Saldo
     public decimal Balance { get; private set; }
-    public Account(string number, string name, bool vatEligible)
+    public Account(string number, string name, bool vatEligible = false)
     {
         Number = number;
         Name = name;
