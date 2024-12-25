@@ -1,6 +1,6 @@
 {
-  "name": "Web.Wasm",
-  "short_name": "Web.Wasm",
+  "name": "Taxana",
+  "short_name": "Taxana",
   "id": "./",
   "start_url": "./",
   "display": "standalone",

@@ -1,5 +1,5 @@
 // Räkenskapsår
-namespace Domain.Entities;
+namespace Taxana.Backend.Models;
 
 public record AccountingPeriod(DateTime Start, DateTime End);
 

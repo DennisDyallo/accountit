@@ -1,7 +1,7 @@
-using Domain.Enums;
+
 using Domain.Extensions;
 
-namespace Domain.Entities
+namespace Taxana.Backend.Entities
 {
     public class Transaction
     {

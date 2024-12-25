@@ -1,6 +1,6 @@
-using Domain.Enums;
 
-namespace Domain.Extensions;
+
+namespace Taxana.Backend.Extensions;
 
 public static class VATRateExtensions
 {

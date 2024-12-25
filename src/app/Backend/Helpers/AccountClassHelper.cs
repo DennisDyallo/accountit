@@ -1,6 +1,6 @@
-using Domain.Enums;
+using Taxana.Backend.Enums;
 
-namespace Domain.Helpers
+namespace Taxana.Backend.Helpers
 {
     public static class AccountClassHelper
     {

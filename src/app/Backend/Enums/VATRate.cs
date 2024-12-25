@@ -1,5 +1,5 @@
 // Momssatser
-namespace Domain.Enums;
+namespace Taxana.Backend.Enums;
 
 public enum VATRate
 {

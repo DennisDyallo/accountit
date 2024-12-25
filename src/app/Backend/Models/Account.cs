@@ -1,28 +1,29 @@
 // Represents an account in the Swedish BAS Kontoplan
 // Konto enligt BAS Kontoplan
 
-using Domain.Enums;
-using Domain.Helpers;
 
-namespace Domain.Entities;
+using Taxana.Backend.Enums;
+using Taxana.Backend.Helpers;
+
+namespace Taxana.Backend.Models;
 
 public class Account
 {
     // Kontonummer
     public string Number { get; init; }
-    
+
     // Kontonamn
     public string Name { get; init; }
-    
+
     // Kontotyp (tillgång, skuld, etc.)
     public AccountType Type { get; init; }
-    
+
     // Kontogrupp enligt BAS (1-8)
     public AccountClass Class { get; init; }
-    
+
     // Momspliktigt konto
     public bool VATEligible { get; init; }
-    
+
     // Saldo
     public decimal Balance { get; private set; }
     public Account(string number, string name, bool vatEligible)

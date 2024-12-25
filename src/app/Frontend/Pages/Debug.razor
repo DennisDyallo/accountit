@@ -1,0 +1,102 @@
+﻿@page "/Debug"
+@using System.Text.Json
+@using Domain.Infrastructure
+@inject IDexieStore Store
+@inject TaxanaSchemaService SchemaService
+
+
+<h3>IndexedDB Test</h3>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="InitializeDb">Initialize DB</button>
+</div>
+
+<div class="mb-3">
+    <button class="btn btn-secondary" @onclick="AddTestRecord">Add Test Record</button>
+</div>
+
+<div class="mb-3">
+    <button class="btn btn-info" @onclick="GetAllRecords">Get All Records</button>
+</div>
+
+<div>
+    @if (_error != null)
+    {
+        <div class="alert alert-danger">
+            @_error
+        </div>
+    }
+
+    @if (_results != null)
+    {
+        <pre>@_results</pre>
+    }
+</div>
+
+@code {
+    private string? _error;
+    private string? _results;
+
+    private async Task InitializeDb()
+    {
+        _error = null;
+
+        try
+        {
+            var schema = new Dictionary<string, string>
+                {
+                    ["testTable"] = "++id, name, timestamp"
+                };
+
+            await Store.ResetAndInitializeAsync("TestDB", 1, schema);
+            _results = "Database initialized";
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to initialize: {ex.Message}";
+        }
+    }
+
+    private async Task AddTestRecord()
+    {
+        _error = null;
+        var testData = new
+        {
+            name = $"Test Record {DateTime.Now.ToShortTimeString()}",
+            timestamp = DateTime.Now
+        };
+
+        try
+        {
+            var id = await Store.AddAsync("testTable", testData);
+            _results = $"Added record with ID: {id}";
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to add record: {ex.Message}";
+        }
+    }
+
+    private async Task GetAllRecords()
+    {
+        try
+        {
+            _error = null;
+            var records = await Store.GetAllAsync<dynamic>("testTable");
+            _results = JsonSerializer.Serialize(records, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to get records: {ex.Message}";
+        }
+    }
+
+}

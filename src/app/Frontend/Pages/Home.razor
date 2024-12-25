@@ -1,54 +1,104 @@
-﻿@page "/"
+@page "/"
 @using System.Text.Json
 @using Domain.Infrastructure
-@inject DexieStore Store
+@using Domain.Models
+@inject IDexieStore Store
+@inject ISchemaService SchemaService
 
-<h3>IndexedDB Test</h3>
-
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="InitializeDb">Initialize DB</button>
-</div>
+<h3>BAS Account Management</h3>
 
 <div class="mb-3">
-    <button class="btn btn-secondary" @onclick="AddTestRecord">Add Test Record</button>
+    <button class="btn btn-primary" @onclick="InitializeDb">Initialize Database</button>
 </div>
 
-<div class="mb-3">
-    <button class="btn btn-info" @onclick="GetAllRecords">Get All Records</button>
-</div>
-
-<div>
-    @if (_error != null)
-    {
-        <div class="alert alert-danger">
-            @_error
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Add Account
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Account Number</label>
+                    <input type="text" class="form-control" @bind="_newAccount.Number" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input type="text" class="form-control" @bind="_newAccount.Name" />
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" @bind="_newAccount.VATEligible">
+                        <label class="form-check-label">VAT Eligible</label>
+                    </div>
+                </div>
+                <button class="btn btn-primary" @onclick="AddAccount">Add Account</button>
+            </div>
         </div>
-    }
-
-    @if (_results != null)
-    {
-        <pre>@_results</pre>
-    }
+    </div>
 </div>
+
+<div class="mb-3">
+    <button class="btn btn-info" @onclick="LoadAccounts">Load Accounts</button>
+</div>
+
+@if (_accounts != null && _accounts.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Number</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Class</th>
+                    <th>VAT Eligible</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var account in _accounts)
+                {
+                    <tr>
+                        <td>@account.Number</td>
+                        <td>@account.Name</td>
+                        <td>@account.Type</td>
+                        <td>@account.Class</td>
+                        <td>@(account.VATEligible ? "Yes" : "No")</td>
+                        <td>@account.Balance.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (_error != null)
+{
+    <div class="alert alert-danger mt-3">
+        @_error
+    </div>
+}
 
 @code {
     private string? _error;
-    private string? _results;
+    private List<Account>? _accounts;
+    private readonly AccountInput _newAccount = new();
+
+    private class AccountInput
+    {
+        public string Number { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public bool VATEligible { get; set; }
+    }
 
     private async Task InitializeDb()
     {
         try
         {
-            
             _error = null;
-            var schema = new Dictionary<string, string>
-            {
-                ["testTable"] = "++id, name, timestamp"
-            };
-
-            await Store.ResetAndInitializeAsync("TestDB", schema);
-            _results = "Database initialized";
-            StateHasChanged();
+            await SchemaService.ResetDatabaseAsync();
+            await LoadAccounts();
         }
         catch (Exception ex)
         {
@@ -56,43 +106,55 @@
         }
     }
 
-    private async Task AddTestRecord()
+    private async Task AddAccount()
     {
         try
         {
             _error = null;
-            var testData = new
+            
+            if (string.IsNullOrWhiteSpace(_newAccount.Number) || string.IsNullOrWhiteSpace(_newAccount.Name))
             {
-                name = $"Test Record {DateTime.Now.ToShortTimeString()}",
-                timestamp = DateTime.Now
-            };
+                _error = "Account number and name are required";
+                return;
+            }
 
-            var id = await Store.AddAsync("testTable", testData);
-            _results = $"Added record with ID: {id}";
-            StateHasChanged();
+            var account = new Account(
+                _newAccount.Number,
+                _newAccount.Name,
+                _newAccount.VATEligible
+            );
+
+            await Store.AddAsync("accounts", account);
+            
+            // Reset form
+            _newAccount.Number = string.Empty;
+            _newAccount.Name = string.Empty;
+            _newAccount.VATEligible = false;
+
+            await LoadAccounts();
         }
         catch (Exception ex)
         {
-            _error = $"Failed to add record: {ex.Message}";
+            _error = $"Failed to add account: {ex.Message}";
         }
     }
 
-    private async Task GetAllRecords()
+    private async Task LoadAccounts()
     {
         try
         {
             _error = null;
-            var records = await Store.GetAllAsync<dynamic>("testTable");
-            _results = JsonSerializer.Serialize(records, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-            StateHasChanged();
+            var accounts = await Store.GetAllAsync<Account>("accounts");
+            _accounts = accounts.OrderBy(a => a.Number).ToList();
         }
         catch (Exception ex)
         {
-            _error = $"Failed to get records: {ex.Message}";
+            _error = $"Failed to load accounts: {ex.Message}";
         }
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccounts();
+    }
 }
