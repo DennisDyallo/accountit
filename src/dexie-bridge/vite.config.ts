@@ -1,7 +1,8 @@
 // vite.config.ts
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import { defineConfig } from "vite";
+import { resolve } from "path";
 
+const appJsFolder = "../app/Frontend/wwwroot/js";
 export default defineConfig(({ command, mode }) => ({
   // Base configuration
   build: {
@@ -31,7 +32,7 @@ export default defineConfig(({ command, mode }) => ({
       },
     },
     // Output directory (relative to vite.config.ts)
-    outDir: "../net/Frontend/wwwroot/js",
+    outDir: appJsFolder,
     // Clean the output directory before build
     emptyOutDir: true,
     // Source maps for debugging
