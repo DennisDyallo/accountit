@@ -8,9 +8,9 @@ public class Schema : ISchema
     {
         ["users"] = "++id",
         ["accounts"] = "number",
-        ["vouchers"] = "id",
-        ["invoices"] = "++id",
-        ["attachments"] = "++id",
-        ["fiscalYears"] = "year"
+        ["verifications"] = "++Id",
+        // ["invoices"] = "++id",
+        // ["attachments"] = "++id",
+        // ["fiscalYears"] = "year"
     };
 }

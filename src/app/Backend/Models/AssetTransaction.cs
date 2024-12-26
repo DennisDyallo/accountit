@@ -10,7 +10,7 @@ public class AssetTransaction
     public required string Id { get; init; }
 
     // Koppling till huvudboken
-    // Reference to the general ledger voucher
+    // Reference to the general ledger Verification
     public required string VoucherId { get; init; }
 
     // Transaktionsdatum

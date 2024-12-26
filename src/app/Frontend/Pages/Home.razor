@@ -7,7 +7,7 @@
 
 
 <div class="container">
-    <h3>New Voucher</h3>
+    <h3>New Verification</h3>
 
     <div class="card">
         <div class="card-body">
@@ -115,7 +115,7 @@
             <div class="d-flex justify-content-end">
                 <button class="btn btn-secondary me-2" @onclick="Reset">Clear</button>
                 <button class="btn btn-primary" @onclick="SaveVoucher" disabled="@(!_isBalanced || !_entries.Any())">
-                    Save Voucher
+                    Save Verification
                 </button>
             </div>
             <!-- show user model -->
@@ -123,15 +123,17 @@
             <h4>User Model</h4>
             <pre>@_userModel.Name</pre>
             <hr />
-            <h4>Vouchers</h4>
+            <h4>Verifications</h4>
             <ul>
-                @foreach (var voucher in _userModel.Vouchers)
+                @foreach (var Verification in _userModel.Verifications)
                 {
-                    <li>@voucher.Id - @voucher.Date.ToString("dd/MM/yyyy") - @voucher.Description</li>
-                    foreach (var entry in voucher.Entries)   
+                    <li>@Verification.Id - @Verification.Date.ToString("dd/MM/yyyy") - @Verification.Description</li>
+                    <li>Number: @Verification.Number</li>
+                    foreach (var entry in Verification.Entries)
                     {
                         <ul>
-                            <li><strong>Account:</strong> @entry.Account?.Name ?? "N/A"</li>
+                            <li><strong>Account:</strong> @entry.Account?.Name"</li>
+                            <li><strong>Id:</strong> @entry."</li>
                             <li><strong>Debit:</strong> @entry.Debit.ToString("N2")</li>
                             <li><strong>Credit:</strong> @entry.Credit.ToString("N2")</li>
                             <li><strong>VAT Rate:</strong> @entry.VATRate?.ToString().Replace("_", " ") ?? "No VAT"</li>
@@ -139,7 +141,7 @@
                     }
                 }
             </ul>
-            <!-- show all vouchers -->
+            <!-- show all verifications -->
         </div>
     </div>
 </div>
@@ -192,7 +194,7 @@
     private class UserModel
     {
         public string Name { get; set; } = "TestUser";
-        public IEnumerable<Voucher> Vouchers { get; set; } = Enumerable.Empty<Voucher>();
+        public IEnumerable<Verification> Verifications { get; set; } = Enumerable.Empty<Verification>();
     }
 
     protected override void OnInitialized()
@@ -231,31 +233,28 @@
             // Convert entries to final format
             var voucherEntries = _entries
             .Where(e => e.Account != null && (e.Debit != 0 || e.Credit != 0))
-            .Select(e => new VoucherEntry
+            .Select(e => new VerificationEntry
                 {
-                    VoucherId = voucherId,
                     Account = e.Account!,
                     Debit = e.Debit,
                     Credit = e.Credit,
                     VATRate = e.VATRate
-
                 })
             .ToList();
 
-            var voucher = new Voucher
+            var Verification = new Verification
                 {
-                    Id = voucherId,
                     Date = _voucher.Date,
                     Description = _voucher.Description,
                     Type = _voucher.Type,
                     Entries = voucherEntries,
-                    Attachments = new List<Attachment>() // TODO: Implement attachment handling
+                    Attachments = new List<Attachment>()
                 };
 
-            await Store.AddAsync("vouchers", voucher);
-            var userVouchers = await Store.GetAllAsync<Voucher>("vouchers");
+            await Store.AddAsync("verifications", Verification);
+            var userverifications = await Store.GetAllAsync<Verification>("verifications");
 
-            _userModel.Vouchers = userVouchers;
+            _userModel.Verifications = userverifications;
             Reset();
         }
         catch (Exception ex)

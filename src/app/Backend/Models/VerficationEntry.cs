@@ -5,9 +5,10 @@ using Taxana.Backend.Enums;
 
 namespace Taxana.Backend.Models;
 
-public class VoucherEntry
+public class VerificationEntry
 {
-    public Guid VoucherId { get; init; }
+    // public Guid VoucherId { get; init; }
+
 
     // Konto
     public required Account Account { get; init; }
@@ -23,6 +24,6 @@ public class VoucherEntry
 
     public override string ToString()
     {
-        return $"VoucherEntry: VoucherId: {VoucherId}, Account: {Account}, Debit: {Debit}, Credit: {Credit}, VATRate: {VATRate}";
+        return $"VerificationEntry: Account: {Account}, Debit: {Debit}, Credit: {Credit}, VATRate: {VATRate}";
     }
 }

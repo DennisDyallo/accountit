@@ -1,16 +1,16 @@
 // Verifikation
 
-
-
 using Taxana.Backend.Enums;
 
 namespace Taxana.Backend.Models;
 
 // Verifikation
-public class Voucher
+public class Verification
 {
     // Verifikationsnummer (normalt år + löpnummer)
-    public Guid Id { get; set; }
+
+    public int Id { get; set; }
+    public string Number => $"{Date.Year}-{Id}";               // Verifikationsnummer
 
     // Bokföringsdatum
     public DateTime Date { get; init; }
@@ -19,7 +19,9 @@ public class Voucher
     public required string Description { get; init; }
 
     // Verifikationsrader
-    public required List<VoucherEntry> Entries { get; init; }
+    public required List<VerificationEntry> Entries { get; init; }
+
+    public bool IsJournalVoucher { get; init; } // True if manually created (bokföringsorder)
 
     // Bilagor/underlag
     public required List<Attachment> Attachments { get; init; }
@@ -28,6 +30,6 @@ public class Voucher
     public VoucherType Type { get; init; }
     public override string ToString()
     {
-        return $"Voucher: {Id}, Date: {Date}, Description: {Description}, Type: {Type}";
+        return $"Verification: {Id}, Date: {Date}, Description: {Description}, Type: {Type}";
     }
 }
