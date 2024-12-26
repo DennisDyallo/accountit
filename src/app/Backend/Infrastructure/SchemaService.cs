@@ -1,31 +1,9 @@
 namespace Taxana.Backend.Infrastructure;
 
-public interface ISchemaService
+public class SchemaService(IDexieStore dexieStore, ISchema schema) : ISchemaService
 {
-    public Task InitializeAsync();
-    public Task ResetDatabaseAsync();
-}
-
-public class TaxanaSchemaService : ISchemaService
-{
-    private readonly IDexieStore _dexieStore;
     private const string DbName = "taxana_db";
     private const int DbVersion = 1;
-
-    public TaxanaSchemaService(IDexieStore dexieStore)
-    {
-        _dexieStore = dexieStore;
-    }
-
-    private IReadOnlyDictionary<string, string> Schema = new Dictionary<string, string>
-    {
-        ["accounts"] = "number",
-        ["transactions"] = "++id",
-        ["invoices"] = "++id",
-        ["attachments"] = "++id",
-        ["settings"] = "id",
-        ["fiscalYears"] = "year"
-    };
 
     private async Task InitializeBaseAccounts()
     {
@@ -36,7 +14,7 @@ public class TaxanaSchemaService : ISchemaService
         {
             try
             {
-                await _dexieStore.AddAsync("accounts", account);
+                await dexieStore.AddAsync("accounts", account);
             }
             catch (Exception ex)
             {
@@ -54,13 +32,13 @@ public class TaxanaSchemaService : ISchemaService
 
     public async Task InitializeAsync()
     {
-        await _dexieStore.InitializeAsync(DbName, DbVersion, Schema);
+        await dexieStore.InitializeAsync(DbName, DbVersion, schema.GetSchema());
         await InitializeBaseAccounts();
     }
 
     public async Task ResetDatabaseAsync()
     {
-        await _dexieStore.ResetAndInitializeAsync(DbName, DbVersion, Schema);
+        await dexieStore.ResetAndInitializeAsync(DbName, DbVersion, schema.GetSchema());
         await InitializeBaseAccounts();
     }
 }

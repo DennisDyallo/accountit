@@ -1,8 +1,6 @@
 
 
-using Taxana.Backend.Enums;
-
-namespace Taxana.Backend.Extensions;
+namespace Taxana.Backend.Enums;
 
 public static class VATRateExtensions
 {

@@ -10,7 +10,7 @@ namespace Taxana.Backend.Models;
 public class Voucher
 {
     // Verifikationsnummer (normalt år + löpnummer)
-    public required string Id { get; init; }
+    public Guid Id { get; set; }
 
     // Bokföringsdatum
     public DateTime Date { get; init; }
@@ -26,4 +26,8 @@ public class Voucher
 
     // Verifikationstyp
     public VoucherType Type { get; init; }
+    public override string ToString()
+    {
+        return $"Voucher: {Id}, Date: {Date}, Description: {Description}, Type: {Type}";
+    }
 }

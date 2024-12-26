@@ -51,4 +51,9 @@ public class Account
     {
         Balance += amount;
     }
+
+    override public string ToString()
+    {
+        return $"Account: {Number}, Name: {Name}, Class: {Class}, Type: {Type}, Balance: {Balance}";
+    }
 }

@@ -1,160 +1,306 @@
 @page "/"
-@using System.Text.Json
-@using Taxana.Backend.Infrastructure
 @using Taxana.Backend.Models
+@using Taxana.Backend.Enums
+@using Taxana.Backend.Infrastructure
 @inject IDexieStore Store
 @inject ISchemaService SchemaService
 
-<h3>BAS Account Management</h3>
 
-<div class="mb-3">
-    <button class="btn btn-primary" @onclick="InitializeDb">Initialize Database</button>
-</div>
+<div class="container">
+    <h3>New Voucher</h3>
 
-<div class="row mb-3">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                Add Account
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" @bind="@_voucher.Date" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Type</label>
+                    <select class="form-select" @bind="@_voucher.Type">
+                        @foreach (var type in Enum.GetValues<VoucherType>())
+                        {
+                            <option value="@type">@type</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Description</label>
+                    <input type="text" class="form-control" @bind="@_voucher.Description" />
+                </div>
             </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Account Number</label>
-                    <input type="text" class="form-control" @bind="_newAccount.Number" />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Name</label>
-                    <input type="text" class="form-control" @bind="_newAccount.Name" />
-                </div>
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" @bind="_newAccount.VATEligible">
-                        <label class="form-check-label">VAT Eligible</label>
-                    </div>
-                </div>
-                <button class="btn btn-primary" @onclick="AddAccount">Add Account</button>
+
+            <h5>Entries</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Account</th>
+                            <th>Debit</th>
+                            <th>Credit</th>
+                            <th>VAT Rate</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in _entries)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="@entry.AccountNumber"
+                                            @onchange="@(e => HandleAccountChange(e, entry))"
+                                            placeholder="Account number" />
+                                        @if (entry.Account != null)
+                                        {
+                                            <span class="input-group-text">@entry.Account.Name</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control" @bind="@entry.Debit" step="0.01" />
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control" @bind="@entry.Credit" step="0.01" />
+                                </td>
+                                <td>
+                                    <select class="form-select" value="@(entry.VATRate?.ToString() ?? "")"
+                                        @onchange="@(e => HandleVATRateChange(e, entry))"
+                                        disabled="@(!entry.Account?.VATEligible ?? true)">
+                                        <option value="">No VAT</option>
+                                        @foreach (var rate in Enum.GetValues<VATRate>())
+                                        {
+                                            <option value="@rate">@rate.ToString().Replace("_", " ")</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" @onclick="@(() => RemoveEntry(entry))">
+                                        ×
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td><strong>Total:</strong></td>
+                            <td><strong>@_entries.Sum(e => e.Debit).ToString("N2")</strong></td>
+                            <td><strong>@_entries.Sum(e => e.Credit).ToString("N2")</strong></td>
+                            <td colspan="2">
+                                <span class="@(_isBalanced ? "text-success" : "text-danger")">
+                                    @(_isBalanced ? "✓ Balanced" : "⚠ Not balanced")
+                                </span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
+
+            <div class="mb-3">
+                <button class="btn btn-outline-primary" @onclick="AddEntry">
+                    Add Entry
+                </button>
+            </div>
+
+            @if (_error != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error:</strong> @_error
+                    <button type="button" class="btn-close" @onclick="@(() => _error = null)"></button>
+                </div>
+            }
+
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-secondary me-2" @onclick="Reset">Clear</button>
+                <button class="btn btn-primary" @onclick="SaveVoucher" disabled="@(!_isBalanced || !_entries.Any())">
+                    Save Voucher
+                </button>
+            </div>
+            <!-- show user model -->
+            <hr />
+            <h4>User Model</h4>
+            <pre>@_userModel.Name</pre>
+            <hr />
+            <h4>Vouchers</h4>
+            <ul>
+                @foreach (var voucher in _userModel.Vouchers)
+                {
+                    <li>@voucher.Id - @voucher.Date.ToString("dd/MM/yyyy") - @voucher.Description</li>
+                    foreach (var entry in voucher.Entries)   
+                    {
+                        <ul>
+                            <li><strong>Account:</strong> @entry.Account?.Name ?? "N/A"</li>
+                            <li><strong>Debit:</strong> @entry.Debit.ToString("N2")</li>
+                            <li><strong>Credit:</strong> @entry.Credit.ToString("N2")</li>
+                            <li><strong>VAT Rate:</strong> @entry.VATRate?.ToString().Replace("_", " ") ?? "No VAT"</li>
+                        </ul>
+                    }
+                }
+            </ul>
+            <!-- show all vouchers -->
         </div>
     </div>
 </div>
 
-<div class="mb-3">
-    <button class="btn btn-info" @onclick="LoadAccounts">Load Accounts</button>
-</div>
-
-@if (_accounts != null && _accounts.Any())
-{
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Number</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Class</th>
-                    <th>VAT Eligible</th>
-                    <th>Balance</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var account in _accounts)
-                {
-                    <tr>
-                        <td>@account.Number</td>
-                        <td>@account.Name</td>
-                        <td>@account.Type</td>
-                        <td>@account.Class</td>
-                        <td>@(account.VATEligible ? "Yes" : "No")</td>
-                        <td>@account.Balance.ToString("N2")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-
-@if (_error != null)
-{
-    <div class="alert alert-danger mt-3">
-        @_error
-    </div>
-}
-
 @code {
+
+    private UserModel _userModel = new();
+    private VoucherModel _voucher = new();
+    private List<EntryModel> _entries = new();
     private string? _error;
-    private List<Account>? _accounts;
-    private readonly AccountInput _newAccount = new();
+    private bool _isBalanced => Math.Abs(_entries.Sum(e => e.Debit) - _entries.Sum(e => e.Credit)) < 0.01m;
 
-    private class AccountInput
+    
+    private async Task HandleAccountChange(ChangeEventArgs e, EntryModel entry)
     {
-        public string Number { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public bool VATEligible { get; set; }
+        entry.AccountNumber = e.Value?.ToString() ?? string.Empty;
+        await LoadAccount(entry);
     }
 
-    private async Task InitializeDb()
+    private void HandleVATRateChange(ChangeEventArgs e, EntryModel entry)
+    {
+        var value = e.Value?.ToString();
+        if (string.IsNullOrEmpty(value))
+        {
+            entry.VATRate = null;
+        }
+        else if (Enum.TryParse<VATRate>(value, out var rate))
+        {
+            entry.VATRate = rate;
+        }
+    }
+    
+    private class EntryModel
+    {
+        public string AccountNumber { get; set; } = "";
+        public Account? Account { get; set; }
+        public decimal Debit { get; set; }
+        public decimal Credit { get; set; }
+        public VATRate? VATRate { get; set; }
+    }
+
+
+    private class VoucherModel
+    {
+        public DateTime Date { get; set; } = DateTime.Today;
+        public string Description { get; set; } = "";
+        public VoucherType Type { get; set; }
+    }
+
+    private class UserModel
+    {
+        public string Name { get; set; } = "TestUser";
+        public IEnumerable<Voucher> Vouchers { get; set; } = Enumerable.Empty<Voucher>();
+    }
+
+    protected override void OnInitialized()
+    {
+        AddEntry();
+    }
+
+    private void AddEntry()
+    {
+        _entries.Add(new EntryModel());
+    }
+
+    private void RemoveEntry(EntryModel entry)
+    {
+        _entries.Remove(entry);
+    }
+
+    private async Task SaveVoucher()
     {
         try
         {
-            _error = null;
-            await SchemaService.ResetDatabaseAsync();
-            await LoadAccounts();
-        }
-        catch (Exception ex)
-        {
-            _error = $"Failed to initialize: {ex.Message}";
-        }
-    }
-
-    private async Task AddAccount()
-    {
-        try
-        {
-            _error = null;
-            
-            if (string.IsNullOrWhiteSpace(_newAccount.Number) || string.IsNullOrWhiteSpace(_newAccount.Name))
+            if (!_isBalanced)
             {
-                _error = "Account number and name are required";
+                _error = "Entries must be balanced before saving";
                 return;
             }
 
-            var account = new Account(
-                _newAccount.Number,
-                _newAccount.Name,
-                _newAccount.VATEligible
-            );
+            if (string.IsNullOrWhiteSpace(_voucher.Description))
+            {
+                _error = "Description is required";
+                return;
+            }
 
-            await Store.AddAsync("accounts", account);
-            
-            // Reset form
-            _newAccount.Number = string.Empty;
-            _newAccount.Name = string.Empty;
-            _newAccount.VATEligible = false;
+            var voucherId = Guid.NewGuid();
 
-            await LoadAccounts();
+            // Convert entries to final format
+            var voucherEntries = _entries
+            .Where(e => e.Account != null && (e.Debit != 0 || e.Credit != 0))
+            .Select(e => new VoucherEntry
+                {
+                    VoucherId = voucherId,
+                    Account = e.Account!,
+                    Debit = e.Debit,
+                    Credit = e.Credit,
+                    VATRate = e.VATRate
+
+                })
+            .ToList();
+
+            var voucher = new Voucher
+                {
+                    Id = voucherId,
+                    Date = _voucher.Date,
+                    Description = _voucher.Description,
+                    Type = _voucher.Type,
+                    Entries = voucherEntries,
+                    Attachments = new List<Attachment>() // TODO: Implement attachment handling
+                };
+
+            await Store.AddAsync("vouchers", voucher);
+            var userVouchers = await Store.GetAllAsync<Voucher>("vouchers");
+
+            _userModel.Vouchers = userVouchers;
+            Reset();
         }
         catch (Exception ex)
         {
-            _error = $"Failed to add account: {ex.Message}";
+            _error = ex.Message;
         }
     }
 
-    private async Task LoadAccounts()
+    private void Reset()
     {
+        _voucher = new VoucherModel();
+        _entries.Clear();
+        AddEntry();
+        _error = null;
+    }
+
+    private async Task LoadAccount(EntryModel entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.AccountNumber))
+        {
+            entry.Account = null;
+            return;
+        }
+
         try
         {
-            _error = null;
             var accounts = await Store.GetAllAsync<Account>("accounts");
-            _accounts = accounts.OrderBy(a => a.Number).ToList();
+            entry.Account = accounts.FirstOrDefault(a => a.Number == entry.AccountNumber);
+            if (entry.Account == null)
+            {
+                _error = $"Account {entry.AccountNumber} not found";
+            }
+            else if (!entry.Account.VATEligible)
+            {
+                entry.VATRate = null;
+            }
         }
         catch (Exception ex)
         {
-            _error = $"Failed to load accounts: {ex.Message}";
+            _error = ex.Message;
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadAccounts();
+        await SchemaService.ResetDatabaseAsync();
     }
 }
